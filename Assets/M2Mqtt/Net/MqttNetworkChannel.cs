@@ -28,6 +28,7 @@ using System.Security.Authentication;
 #endif
 using System.Net.Sockets;
 using System.Net;
+using System.Threading.Tasks;
 using System.Security.Cryptography.X509Certificates;
 using System;
 using System.Net.Security;
@@ -226,15 +227,27 @@ namespace uPLibrary.Networking.M2Mqtt
             this.userCertificateSelectionCallback = userCertificateSelectionCallback;
 #endif
         }
-
+        
         /// <summary>
         /// Connect to remote server
         /// </summary>
-        public void Connect()
+        public async Task Connect()
         {
             this.socket = new Socket(this.remoteIpAddress.GetAddressFamily(), SocketType.Stream, ProtocolType.Tcp);
             // try connection to the broker
-            this.socket.Connect(new IPEndPoint(this.remoteIpAddress, this.remotePort));
+            // 소켓통신 동기 방식 - 기존
+            // this.socket.Connect(new IPEndPoint(this.remoteIpAddress, this.remotePort)); 
+            //소켓통신 비동기 방식 - 변경
+            this.socket.BeginConnect(new IPEndPoint(this.remoteIpAddress, this.remotePort), new AsyncCallback(ConnectionCallback), this.socket);
+            //1초에 한번씩 콜백함수 끝났는지 검사
+            while(!IsEndConnection){
+                await Task.Delay(1000);
+                if(IsEndConnection)
+                {
+                    break;
+                }
+            }
+            IsEndConnection = false;
 
 #if SSL
             // secure channel requested
@@ -270,7 +283,11 @@ namespace uPLibrary.Networking.M2Mqtt
             }
 #endif
         }
-
+        bool IsEndConnection = false;
+        public void ConnectionCallback(IAsyncResult IAR)
+        {
+            IsEndConnection = true;
+        }
         /// <summary>
         /// Send data on the network channel
         /// </summary>

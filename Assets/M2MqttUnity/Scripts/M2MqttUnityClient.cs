@@ -303,29 +303,52 @@ namespace M2MqttUnity
 
             client.Settings.TimeoutOnConnection = timeoutOnConnection;
             string clientId = Guid.NewGuid().ToString();
-            try
-            {
-                client.Connect(clientId, mqttUserName, mqttPassword);
-            }
-            catch (Exception e)
-            {
-                client = null;
-                Debug.LogErrorFormat("Failed to connect to {0}:{1}:\n{2}", brokerAddress, brokerPort, e.ToString());
-                OnConnectionFailed(e.Message);
-                yield break;
-            }
-            if (client.IsConnected)
-            {
-                client.ConnectionClosed += OnMqttConnectionClosed;
-                // register to message received 
-                client.MqttMsgPublishReceived += OnMqttMessageReceived;
-                mqttClientConnected = true;
-                OnConnected();
-            }
-            else
-            {
-                OnConnectionFailed("CONNECTION FAILED!");
-            }
+
+            //Connect 콜백으로 소켓 연결 끝날때 콜백받아옴.
+            client.ConnectCallback(clientId, mqttUserName, mqttPassword, () => {
+                Debug.Log("client.Connect end");
+                
+                if(client == null){
+                    OnConnectionFailed("CONNECTION FAILED!");
+                    return;
+                }
+                if (client.IsConnected)
+                {
+                    client.ConnectionClosed += OnMqttConnectionClosed;
+                    // register to message received 
+                    client.MqttMsgPublishReceived += OnMqttMessageReceived;
+                    mqttClientConnected = true;
+                    OnConnected();
+
+                }
+                else
+                {
+                    OnConnectionFailed("CONNECTION FAILED!");
+                }
+            });
+            // try
+            // {
+            //     client.Connect(clientId, mqttUserName, mqttPassword);
+            // }
+            // catch (Exception e)
+            // {
+            //     client = null;
+            //     Debug.LogErrorFormat("Failed to connect to {0}:{1}:\n{2}", brokerAddress, brokerPort, e.ToString());
+            //     OnConnectionFailed(e.Message);
+            //     yield break;
+            // }
+            // if (client.IsConnected)
+            // {
+            //     client.ConnectionClosed += OnMqttConnectionClosed;
+            //     // register to message received 
+            //     client.MqttMsgPublishReceived += OnMqttMessageReceived;
+            //     mqttClientConnected = true;
+            //     OnConnected();
+            // }
+            // else
+            // {
+            //     OnConnectionFailed("CONNECTION FAILED!");
+            // }
         }
 
         private IEnumerator DoDisconnect()

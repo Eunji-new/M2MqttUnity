@@ -133,6 +133,7 @@ namespace M2MqttUnity.Examples
         protected override void OnConnectionFailed(string errorMessage)
         {
             AddUiMessage("CONNECTION FAILED! " + errorMessage);
+            StartCoroutine(CoReConnect());
         }
 
         protected override void OnDisconnected()
@@ -143,6 +144,15 @@ namespace M2MqttUnity.Examples
         protected override void OnConnectionLost()
         {
             AddUiMessage("CONNECTION LOST!");
+            StartCoroutine(CoReConnect());
+        }
+
+        IEnumerator CoReConnect()
+        {
+            Disconnect(); //재연결하기전 DisConnect 해줘야 연결관련 변수들이 초기화됨. 초기화 하지 않으면 연결 끊어짐 감지를 제대로 못함.
+            yield return new WaitForSeconds(5.0f);
+            Debug.Log($"{brokerAddress}로 Connect 재시도");
+            Connect();
         }
 
         private void UpdateUI()

@@ -16,6 +16,7 @@ Contributors:
 
 using System;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace uPLibrary.Networking.M2Mqtt
 {
@@ -59,6 +60,6 @@ namespace uPLibrary.Networking.M2Mqtt
         /// <summary>
         /// Connect to remote server
         /// </summary>
-        void Connect();
+        Task Connect();
     }
 }

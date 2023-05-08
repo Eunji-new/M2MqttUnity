@@ -20,6 +20,7 @@ Contributors:
 
 using System;
 using System.Net;
+using System.Threading.Tasks;
 #if !(WINDOWS_APP || WINDOWS_PHONE_APP || (!UNITY_EDITOR&&UNITY_WSA_10_0&&!ENABLE_IL2CPP))
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
@@ -481,7 +482,7 @@ namespace uPLibrary.Networking.M2Mqtt
         /// </summary>
         /// <param name="clientId">Client identifier</param>
         /// <returns>Return code of CONNACK message from broker</returns>
-        public byte Connect(string clientId)
+        public Task<byte> Connect(string clientId)
         {
             return this.Connect(clientId, null, null, false, MqttMsgConnect.QOS_LEVEL_AT_MOST_ONCE, false, null, null, true, MqttMsgConnect.KEEP_ALIVE_PERIOD_DEFAULT);
         }
@@ -493,7 +494,7 @@ namespace uPLibrary.Networking.M2Mqtt
         /// <param name="username">Username</param>
         /// <param name="password">Password</param>
         /// <returns>Return code of CONNACK message from broker</returns>
-        public byte Connect(string clientId,
+        public Task<byte> Connect(string clientId,
             string username,
             string password)
         {
@@ -509,13 +510,24 @@ namespace uPLibrary.Networking.M2Mqtt
         /// <param name="cleanSession">Clean sessione flag</param>
         /// <param name="keepAlivePeriod">Keep alive period</param>
         /// <returns>Return code of CONNACK message from broker</returns>
-        public byte Connect(string clientId,
+        public Task<byte> Connect(string clientId,
             string username,
             string password,
             bool cleanSession,
             ushort keepAlivePeriod)
         {
             return this.Connect(clientId, username, password, false, MqttMsgConnect.QOS_LEVEL_AT_MOST_ONCE, false, null, null, cleanSession, keepAlivePeriod);
+        }
+        
+
+        public delegate void Callback();
+        public async void ConnectCallback(string clientId,
+            string username,
+            string password, Callback callback)
+        {
+            //Connect함수 끝날때까지 기다리고 콜백 생성
+            await this.Connect(clientId, username, password, false, MqttMsgConnect.QOS_LEVEL_AT_MOST_ONCE, false, null, null, true, MqttMsgConnect.KEEP_ALIVE_PERIOD_DEFAULT);
+            callback();
         }
 
         /// <summary>
@@ -532,7 +544,7 @@ namespace uPLibrary.Networking.M2Mqtt
         /// <param name="cleanSession">Clean sessione flag</param>
         /// <param name="keepAlivePeriod">Keep alive period</param>
         /// <returns>Return code of CONNACK message from broker</returns>
-        public byte Connect(string clientId,
+        public async Task<byte> Connect(string clientId,
             string username,
             string password,
             bool willRetain,
@@ -559,7 +571,7 @@ namespace uPLibrary.Networking.M2Mqtt
             try
             {
                 // connect to the broker
-                this.channel.Connect();
+                await this.channel.Connect();
             }
             catch (Exception ex)
             {
@@ -572,7 +584,14 @@ namespace uPLibrary.Networking.M2Mqtt
             // start thread for receiving messages from broker
             Fx.StartThread(this.ReceiveThread);
             
-            MqttMsgConnack connack = (MqttMsgConnack)this.SendReceive(connect);
+            MqttMsgConnack connack;
+            try{
+                connack = (MqttMsgConnack)this.SendReceive(connect);
+            }
+            catch(Exception ex)
+            {
+                return 0;
+            }
             // if connection accepted, start keep alive timer and 
             if (connack.ReturnCode == MqttMsgConnack.CONN_ACCEPTED)
             {
