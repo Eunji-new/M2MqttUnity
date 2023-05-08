@@ -1,5 +1,32 @@
 M2MQTT for Unity
 ====================
+
+This is a repository that has modified the socket communication part of the existing M2MQTT for Unity to asynchronous programming.
+
+## 📌 Drawbacks of the original
+- The socket communication is done synchronously (using Socket.Connect), which causes system hang-ups during connection.
+
+## ✅ Modifications made in this repository
+- The socket communication has been changed to asynchronous (using Socket.BeginConnect).
+- This allows the socket IP connection to operate normally without system stoppage during connection, using asynchronous communication.
+- A logic has been added to automatically reconnect when the connection is lost.
+
+
+----
+
+기존 M2MQTT for Unity의 소켓통신 부분을 비동기 프로그래밍으로 변경한 repository입니다.
+
+<b><기존 M2MQTT for Unity의 단점></b>
+- 소켓통신이 동기(Connect)로 이루어져 있어, 연결 중에는 시스템 중지 현상이 생깁니다.
+
+<b><변경한 부분></b>
+- 소켓통신을 비동기(BeginConnect)로 변경하였습니다.
+- 이는 비동기 통신으로 소켓 ip 연결 중에 시스템이 정지하지 않고 정상작동합니다.
+- 연결이 끊겼을 경우, 자동으로 재연결하는 로직을 추가하였습니다.
+
+----
+
+
 This is a simple [Unity3d](http://unity3d.com/) project for using [M2MQTT](https://github.com/eclipse/paho.mqtt.m2mqtt) with Unity.
 The M2MQTT library was modified to run also on UWP/HoloLens.
 
